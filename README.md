@@ -5,7 +5,7 @@ A cute VRoid character, Alice Chan!
 ![alice_chan_banner_min](https://user-images.githubusercontent.com/5277788/180695600-667c9f8f-abeb-41b3-87d9-4b9086332cf1.png)
 
 ## Requirements
-- Unity 2019.4.LTS +
+- Unity 2019.4 LTS +
 
 ## Install
 1. Install dependencies from UPM using git URLs in the [Dependencies](#dependencies) section
