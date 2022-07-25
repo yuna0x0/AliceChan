@@ -15,7 +15,7 @@ You can choose to install it as a UPM package or by importing `.unitypackage` in
 
 A. UPM Package
 
-1. Install dependencies from UPM using git URLs in the [Dependencies](#dependencies) section
+1. Install dependencies using OpenUPM or git URLs in the [Dependencies](#dependencies) section
 2. Install this package from UPM using this git URL:
 ```
 https://github.com/edisonlee55/AliceChan.git
