@@ -4,7 +4,7 @@ A cute VRoid character, Alice Chan!
 
 ![alice_chan_banner_min](https://user-images.githubusercontent.com/5277788/180695600-667c9f8f-abeb-41b3-87d9-4b9086332cf1.png)
 
-## View model in VRoid Hub
+## VRoid Hub
 https://hub.vroid.com/en/characters/8722809851642259362/models/3746498118724430196
 
 ## Requirements
