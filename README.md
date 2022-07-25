@@ -13,7 +13,7 @@ https://hub.vroid.com/en/characters/8722809851642259362/models/37464981187244301
 ## Install
 You can choose to install it as a UPM package or by importing `.unitypackage` into your `Assets` folder.
 
-A. UPM Package
+A. UPM Package **(Recommended)**
 
 1. Install dependencies using OpenUPM or git URLs in the [Dependencies](#dependencies) section
 2. Install this package from UPM using this git URL:
@@ -21,7 +21,7 @@ A. UPM Package
 https://github.com/edisonlee55/AliceChan.git
 ```
 
-B. Import `.unitypackage`
+B. Import `.unitypackage` **(Not Recommended / No UniVRM support)**
 
 1. Go to [Releases](https://github.com/edisonlee55/AliceChan/releases) to download the latest version of `.unitypackage`
 
