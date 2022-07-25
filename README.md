@@ -1,5 +1,6 @@
 # AliceChan
 
+![alice_chan_banner_min](https://user-images.githubusercontent.com/5277788/180695600-667c9f8f-abeb-41b3-87d9-4b9086332cf1.png)
 
 ## License
 This work is licensed under a
