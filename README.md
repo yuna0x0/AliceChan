@@ -16,10 +16,11 @@ You can choose to install it as a UPM package or by importing `.unitypackage` in
 A. UPM Package **(Recommended)**
 
 1. Install dependencies using OpenUPM or git URLs in the [Dependencies](#dependencies) section
-2. Install this package from UPM using this git URL:
-```
-https://github.com/edisonlee55/AliceChan.git
-```
+2. Install this package using OpenUPM or git URL:
+
+| UPM Package                | Git URL                                      |
+|----------------------------|----------------------------------------------|
+| com.edisonlee55.alice-chan | https://github.com/edisonlee55/AliceChan.git |
 
 B. Import `.unitypackage` **(Not Recommended / No UniVRM support)**
 
