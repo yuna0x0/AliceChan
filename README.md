@@ -11,14 +11,22 @@ https://hub.vroid.com/en/characters/8722809851642259362/models/37464981187244301
 - Unity 2019.4 LTS +
 
 ## Install
+You can choose to install it as a UPM package or by importing `.unitypackage` into your `Assets` folder.
+
+A. UPM Package
+
 1. Install dependencies from UPM using git URLs in the [Dependencies](#dependencies) section
 2. Install this package from UPM using this git URL:
 ```
 https://github.com/edisonlee55/AliceChan.git
 ```
 
+B. Import `.unitypackage`
+
+1. Go to [Releases](https://github.com/edisonlee55/AliceChan/releases) to download the latest version of `.unitypackage`.
+
 ## Usage
-After installed, you can go to `Packages/Alice Chan/` folder and copy the assets you want into your `Assets/` folder.
+After installed, you can go to `Packages/Alice Chan` folder and copy the assets you want into your `Assets` folder.
 
 ## Dependencies
 Dependencies must install in the order from top to down below:
