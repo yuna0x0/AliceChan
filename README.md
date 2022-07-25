@@ -23,7 +23,7 @@ https://github.com/edisonlee55/AliceChan.git
 
 B. Import `.unitypackage`
 
-1. Go to [Releases](https://github.com/edisonlee55/AliceChan/releases) to download the latest version of `.unitypackage`.
+1. Go to [Releases](https://github.com/edisonlee55/AliceChan/releases) to download the latest version of `.unitypackage`
 
 ## Usage
 After installed, you can go to `Packages/Alice Chan` folder and copy the assets you want into your `Assets` folder.
