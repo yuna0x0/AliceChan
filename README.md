@@ -39,7 +39,7 @@ Dependencies must install in the order from top to down below:
 | com.vrmc.univrm     | https://github.com/vrm-c/UniVRM.git?path=/Assets/VRM#v0.102.0        |
 
 ## License
-This work is licensed under a
+This work by [edisonlee55](https://github.com/edisonlee55) is licensed under a
 [Creative Commons Attribution-ShareAlike 4.0 International License][cc-by-sa].
 
 [![CC BY-SA 4.0][cc-by-sa-image]][cc-by-sa]
