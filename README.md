@@ -26,7 +26,7 @@ B. Import `.unitypackage`
 
 1. Go to [Releases](https://github.com/edisonlee55/AliceChan/releases) to download the latest version of `.unitypackage`
 
-You also can download it at:
+You can also download it at:
 - [Unity Asset Store](https://assetstore.unity.com/packages/slug/228367)
 - [itch.io](https://edisonlee55.itch.io/alice-chan)
 - [BOOTH](https://edisonlee55.booth.pm/items/4031993)
