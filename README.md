@@ -13,7 +13,7 @@ https://hub.vroid.com/en/characters/8722809851642259362/models/37464981187244301
 ## Install
 You can choose to install it as a UPM package or by importing `.unitypackage` into your `Assets` folder.
 
-A. UPM Package **(Recommended)**
+A. UPM Package
 
 1. Install dependencies using OpenUPM or git URLs in the [Dependencies](#dependencies) section
 2. Install this package using OpenUPM or git URL:
@@ -22,9 +22,14 @@ A. UPM Package **(Recommended)**
 |----------------------------|----------------------------------------------|
 | com.edisonlee55.alice-chan | https://github.com/edisonlee55/AliceChan.git |
 
-B. Import `.unitypackage` **(Not Recommended / No UniVRM support)**
+B. Import `.unitypackage`
 
 1. Go to [Releases](https://github.com/edisonlee55/AliceChan/releases) to download the latest version of `.unitypackage`
+
+You also can download it at:
+- [Unity Asset Store](https://assetstore.unity.com/packages/slug/228367)
+- [itch.io](https://edisonlee55.itch.io/alice-chan)
+- [BOOTH](https://edisonlee55.booth.pm/items/4031993)
 
 ## Usage
 After installed, you can go to `Packages/Alice Chan` folder and copy the assets you want into your `Assets` folder.
