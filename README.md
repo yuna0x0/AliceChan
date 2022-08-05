@@ -39,9 +39,9 @@ Dependencies must install in the order from top to down below:
 
 | UPM Package         | Git URL                                                              |
 |---------------------|----------------------------------------------------------------------|
-| com.vrmc.vrmshaders | https://github.com/vrm-c/UniVRM.git?path=/Assets/VRMShaders#v0.102.0 |
-| com.vrmc.gltf       | https://github.com/vrm-c/UniVRM.git?path=/Assets/UniGLTF#v0.102.0    |
-| com.vrmc.univrm     | https://github.com/vrm-c/UniVRM.git?path=/Assets/VRM#v0.102.0        |
+| com.vrmc.vrmshaders | https://github.com/vrm-c/UniVRM.git?path=/Assets/VRMShaders#v0.102.1 |
+| com.vrmc.gltf       | https://github.com/vrm-c/UniVRM.git?path=/Assets/UniGLTF#v0.102.1    |
+| com.vrmc.univrm     | https://github.com/vrm-c/UniVRM.git?path=/Assets/VRM#v0.102.1        |
 
 ## License
 This work by [edisonlee55](https://github.com/edisonlee55) is licensed under a
