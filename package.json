@@ -1,15 +1,13 @@
 {
     "name": "com.edisonlee55.alice-chan",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "displayName": "Alice Chan",
     "description": "A cute VRoid character, Alice Chan!",
     "unity": "2019.4",
     "license": "CC-BY-SA-4.0",
     "licensesUrl": "https://github.com/edisonlee55/AliceChan/blob/main/LICENSE.md",
     "dependencies": {
-        "com.vrmc.vrmshaders": "0.102.1",
-        "com.vrmc.gltf": "0.102.1",
-        "com.vrmc.univrm": "0.102.1"
+        "com.vrmc.univrm": "0.108.0"
     },
     "keywords": [
         "vroid",
