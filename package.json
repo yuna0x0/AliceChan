@@ -3,7 +3,7 @@
     "version": "1.0.3",
     "displayName": "Alice Chan",
     "description": "A cute VRoid character, Alice Chan!",
-    "unity": "2019.4",
+    "unity": "2020.3",
     "license": "CC-BY-SA-4.0",
     "licensesUrl": "https://github.com/edisonlee55/AliceChan/blob/main/LICENSE.md",
     "dependencies": {
