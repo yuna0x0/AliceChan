@@ -56,7 +56,9 @@ files contain no em-dashes, emoji or the old project name.
 ## Continuous integration
 
 `.github/workflows/checks.yml` runs the release check on every pull request, and the EditMode
-tests on Unity 6000.7 and 2022.3 through GameCI. The Unity jobs need:
+tests on Unity 6000.7 and 2022.3 through GameCI. GameCI publishes no images for beta editors,
+so the 6000.7 job runs in the image `editor-image.yml` builds (see `basis/README.md`); run that
+workflow for a new editor version before the checks need it. The Unity jobs need:
 
 - Repository variable `UNITY_CI_ENABLED` set to `true`. Set it to anything else to stop CI from
   logging into the Unity account, for example after a lockout, without touching the secrets.
@@ -65,11 +67,10 @@ tests on Unity 6000.7 and 2022.3 through GameCI. The Unity jobs need:
   the job. No licence file or serial is involved; the `.ulf` route is bound to the machine that
   made the file and no longer applies to Personal seats. Two-factor authentication on the
   account does not interfere.
-- A password made of letters, digits and symbols other than `$`, the backtick, `\` and `"`.
-  The GameCI CLI inlines the value into a shell command, and those characters are rewritten by
-  the shell before Unity sees them, which shows up as `Invalid Credential`. Unity locks the
-  account for ten minutes after a few failed logins, so the workflows make one activation
-  attempt per job and run the two Unity jobs one after the other.
+
+The actions download the GameCI CLI, which the workflows pin to a version rather than tracking
+its latest release. Unity locks an account for ten minutes after a few failed logins, so the
+workflows make one activation attempt per job and run the two Unity jobs one after the other.
 
 The jobs are skipped, not failed, while the variable or the secrets are absent, so pull requests
 from forks stay green.

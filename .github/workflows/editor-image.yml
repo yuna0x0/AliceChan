@@ -1,0 +1,94 @@
+name: Editor image
+
+# Builds one Unity editor image with the windows-mono, linux-il2cpp and android modules and
+# pushes it to this repository's packages. The modules are the targets the Basis bundle combines:
+# GameCI's pre-built images ship one module each, and Basis builds all targets in one process.
+# basis.yml builds the bundle in it, and checks.yml runs the package tests in it, since GameCI
+# publishes no images for beta editors.
+#
+# A push that changes this file builds the defaults below, so a new editor version can be built
+# from a branch before the workflow can be dispatched from main. An image whose tag already
+# exists is not rebuilt unless the workflow is run with force.
+
+on:
+  workflow_dispatch:
+    inputs:
+      unityVersion:
+        description: Unity editor version
+        default: 6000.7.0b2
+      modules:
+        description: Comma separated Unity modules
+        default: windows-mono,linux-il2cpp,android
+      force:
+        description: Rebuild even if the tag already exists
+        type: boolean
+        default: false
+  push:
+    paths:
+      - .github/workflows/editor-image.yml
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  UNITY_VERSION: ${{ github.event.inputs.unityVersion || '6000.7.0b2' }}
+  MODULES: ${{ github.event.inputs.modules || 'windows-mono,linux-il2cpp,android' }}
+  # GameCI's hub and base images at a release version, as GameCI's own editor image builds take
+  # them. The CLI otherwise uses latest.
+  HUB_IMAGE: unityci/hub:ubuntu-3.2.2
+  BASE_IMAGE: unityci/base:ubuntu-3.2.2
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The image lives under this repository (image names must be lowercase, hence alicechan),
+      # and the tag follows GameCI's own naming, <os>-<version>-<modules>, so a different module
+      # set gets its own tag instead of replacing one the other workflows pull. GameCI's own
+      # editor image workflow skips a tag that already exists in the same way.
+      - name: Check for an existing image
+        id: image
+        env:
+          FORCE: ${{ github.event.inputs.force }}
+        run: |
+          tag="ghcr.io/${{ github.repository_owner }}/alicechan/unity-editor:ubuntu-$UNITY_VERSION-${MODULES//,/-}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ "$FORCE" != "true" ] && docker manifest inspect "$tag" > /dev/null 2>&1; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$tag already exists. Run the workflow with force to rebuild it."
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Free disk space
+        if: steps.image.outputs.build == 'true'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Install the GameCI CLI
+        if: steps.image.outputs.build == 'true'
+        env:
+          # The same version the other workflows pin through the actions' cliVersion.
+          GAME_CI_VERSION: v0.1.72
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/game-ci/cli/main/install.sh | sh
+          echo "$HOME/.game-ci/bin" >> "$GITHUB_PATH"
+
+      - name: Build and push
+        if: steps.image.outputs.build == 'true'
+        run: |
+          game-ci build-unity-image ubuntu "$MODULES" \
+            --unity-version "$UNITY_VERSION" \
+            --hub-image "$HUB_IMAGE" \
+            --base-image "$BASE_IMAGE" \
+            --tag "${{ steps.image.outputs.tag }}" \
+            --push
