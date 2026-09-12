@@ -1,0 +1,36 @@
+{
+  "name": "com.yuna0x0.alice-chan",
+  "displayName": "Alice Chan (Uniform ver.)",
+  "version": "2.0.0",
+  "unity": "2022.3",
+  "description": "Alice Chan (Uniform ver.), a VRoid Studio character, as a VRM 1.0 avatar.",
+  "author": {
+    "name": "yuna0x0",
+    "email": "yuna@yuna0x0.com",
+    "url": "https://yuna0x0.com"
+  },
+  "license": "CC-BY-SA-4.0",
+  "licensesUrl": "https://github.com/yuna0x0/AliceChan/blob/main/LICENSE.md",
+  "changelogUrl": "https://github.com/yuna0x0/AliceChan/blob/main/Packages/com.yuna0x0.alice-chan/CHANGELOG.md",
+  "documentationUrl": "https://github.com/yuna0x0/AliceChan#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yuna0x0/AliceChan.git"
+  },
+  "keywords": [
+    "vroid",
+    "vrm",
+    "vrm1",
+    "avatar",
+    "vr"
+  ],
+  "samples": [
+    {
+      "displayName": "Demo",
+      "description": "A scene with the avatar placed in it.",
+      "path": "Samples~/Demo"
+    }
+  ],
+  "hideInEditor": false,
+  "vpmDependencies": {}
+}

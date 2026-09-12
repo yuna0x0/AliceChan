@@ -1,0 +1,138 @@
+name: Basis
+
+# Builds the avatar as a Basis .BEE bundle and uploads it to Cloudflare R2. Runs on demand, and
+# after a release is published. Activates a Personal seat with the CI account (see checks.yml)
+# and needs an editor image that carries every build target Basis combines into the bundle
+# (see basis/README.md).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version label for the upload path (defaults to package.json)
+        required: false
+      targets:
+        description: Comma separated build targets
+        default: windows,linux,android
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  UNITY_VERSION: 6000.5.10f1
+  # One image with the windows-mono, linux-il2cpp and android modules, built by basis-image.yml.
+  EDITOR_IMAGE: ghcr.io/yuna0x0/unity-editor:6000.5.10f1-basis
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: basis
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Resolve the version
+        id: version
+        run: |
+          version="${{ github.event.inputs.version }}"
+          if [ -z "$version" ]; then
+            version=$(jq -r .version unity/Packages/com.yuna0x0.alice-chan/package.json)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check for credentials
+        id: creds
+        run: |
+          if [ "${{ vars.UNITY_CI_ENABLED }}" != "true" ]; then
+            echo "::error::UNITY_CI_ENABLED is not true; see checks.yml."
+            exit 1
+          fi
+          if [ -z "${{ secrets.UNITY_EMAIL }}" ]; then
+            echo "::error::UNITY_EMAIL is not set."
+            exit 1
+          fi
+          if [ -z "${{ secrets.R2_ACCESS_KEY_ID }}" ]; then
+            echo "::error::R2 credentials are not set in the basis environment."
+            exit 1
+          fi
+
+      - name: Set up the Basis project
+        run: uv run --project tools alicechan-basis-setup
+
+      - uses: actions/cache@v5
+        with:
+          path: basis/.work/Basis/Basis/Library
+          key: basis-library-${{ env.UNITY_VERSION }}-${{ hashFiles('basis/pins.json') }}
+          restore-keys: basis-library-${{ env.UNITY_VERSION }}-
+
+      # unity-builder activates the licence, runs the editor in the image with the method below,
+      # and returns the licence. buildMethod replaces its own build, and manualExit leaves the exit
+      # to the method, since the SDK build is asynchronous.
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the bundle
+        uses: game-ci/unity-builder@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          # Optional. With a serial present the editor logs in with -serial instead of the
+          # licensing client asking for a Personal seat; both need the email and password.
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_LICENSE_RETRY_MAX_ATTEMPTS: 1
+        with:
+          cliVersion: v0.1.53
+          projectPath: basis/.work/Basis/Basis
+          unityVersion: ${{ env.UNITY_VERSION }}
+          customImage: ${{ env.EDITOR_IMAGE }}
+          targetPlatform: StandaloneLinux64
+          buildMethod: AliceChanBasisBuild.Build
+          manualExit: true
+          customParameters: -aliceChanVersion ${{ steps.version.outputs.version }} -aliceChanTargets ${{ github.event.inputs.targets || 'windows,linux,android' }}
+          allowDirtyBuild: true
+
+      - name: List the output
+        run: ls -la basis/.work/Basis/Basis/AssetBundles/AliceChan
+
+      - name: Upload to R2
+        env:
+          RCLONE_CONFIG_R2_TYPE: s3
+          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          RCLONE_CONFIG_R2_ACL: private
+          BUCKET: ${{ secrets.R2_BUCKET }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
+        run: |
+          sudo apt-get install -y -q rclone
+          out=basis/.work/Basis/Basis/AssetBundles/AliceChan
+          bee=$(ls "$out"/*.BEE | head -1)
+          prefix="basis/alice-chan/$VERSION"
+          rclone copyto "$bee" "r2:$BUCKET/$prefix/AliceChan.BEE"
+          for config in "$out"/*.json "$out"/*.txt; do
+            [ -f "$config" ] || continue
+            case "$(basename "$config")" in
+              dontuploadmepassword.txt) continue ;;
+            esac
+            rclone copyto "$config" "r2:$BUCKET/$prefix/$(basename "$config")"
+          done
+          printf '{"version":"%s","bee":"%s/%s/AliceChan.BEE"}\n' "$VERSION" "$PUBLIC_URL" "$prefix" > latest.json
+          rclone copyto latest.json "r2:$BUCKET/basis/alice-chan/latest.json"
+          echo "Uploaded $PUBLIC_URL/$prefix/AliceChan.BEE"
+
+      # The password file is what a client needs alongside the URL. It goes to the workflow run
+      # as an artifact, not to the public bucket; the release notes carry it once confirmed.
+      - uses: actions/upload-artifact@v6
+        with:
+          name: basis-${{ steps.version.outputs.version }}
+          path: basis/.work/Basis/Basis/AssetBundles/AliceChan

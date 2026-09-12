@@ -1,0 +1,22 @@
+{
+    "name": "yuna0x0.AliceChan.Editor",
+    "rootNamespace": "yuna0x0.AliceChan.Editor",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.vrmc.vrm",
+            "expression": "0.131.2",
+            "define": "ALICECHAN_HAS_VRM10"
+        }
+    ],
+    "noEngineReferences": false
+}

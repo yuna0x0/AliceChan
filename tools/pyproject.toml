@@ -1,0 +1,19 @@
+[project]
+name = "alicechan-tools"
+version = "0.1.0"
+description = "Helper commands for the AliceChan repository: release checks, release asset staging, Basis project setup and build."
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+alicechan-release-check = "alicechan_tools.release_check:main"
+alicechan-release-stage = "alicechan_tools.release_stage:main"
+alicechan-basis-setup = "alicechan_tools.basis_setup:main"
+alicechan-basis-build = "alicechan_tools.basis_build:main"
+
+[build-system]
+requires = ["uv_build>=0.8"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""

@@ -1,0 +1,4 @@
+# Unity generates everything except ProjectVersion.txt and manifest.json on first open.
+ProjectSettings/*
+!ProjectSettings/ProjectVersion.txt
+Packages/packages-lock.json
