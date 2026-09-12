@@ -1,0 +1,98 @@
+name: Checks
+
+# Package checks on every pull request and on main. The Unity jobs activate with the CI
+# account's email and password, plus its Personal serial when UNITY_SERIAL is set (GameCI's
+# "serial" method; without it the "personal" method asks the licensing client for a seat). No
+# .ulf: that route is machine-bound and no longer available for Personal. The account must have
+# two-factor authentication off. The jobs are skipped, not failed, while UNITY_EMAIL is absent.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: uv run --project tools alicechan-release-check
+
+  # The Unity jobs also need the repository variable UNITY_CI_ENABLED set to true. It is the
+  # switch to stop CI logging into the Unity account, for example while the account is locked
+  # after failed logins, without touching the secrets.
+  licence:
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ vars.UNITY_CI_ENABLED }}" != "true" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::UNITY_CI_ENABLED is not true, Unity test jobs are skipped."
+          elif [ -n "${{ secrets.UNITY_EMAIL }}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::UNITY_EMAIL is not set, Unity test jobs are skipped."
+          fi
+
+  # The package's EditMode tests, on the version the package is authored in and on its minimum.
+  # One at a time: a Personal account holds few seats, and a seat is held until returned.
+  test:
+    needs: licence
+    if: needs.licence.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - name: Unity 6000.5
+            projectPath: unity
+            unityVersion: 6000.5.10f1
+          - name: Unity 2022.3
+            projectPath: ci/unity-2022.3
+            unityVersion: 2022.3.22f1
+    name: test (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/cache@v5
+        with:
+          path: ${{ matrix.projectPath }}/Library
+          key: library-${{ matrix.unityVersion }}-${{ hashFiles(format('{0}/Packages/manifest.json', matrix.projectPath)) }}
+          restore-keys: library-${{ matrix.unityVersion }}-
+
+      - uses: game-ci/unity-test-runner@v4
+        env:
+          # The action downloads the GameCI CLI from its GitHub releases; the token keeps that
+          # request within the authenticated rate limit.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          # Optional. With a serial present the editor logs in with -serial instead of the
+          # licensing client asking for a Personal seat; both need the email and password.
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          # One activation attempt. The default of four, each with the editor's own three
+          # login retries, locks the Unity account after a single failed run.
+          UNITY_LICENSE_RETRY_MAX_ATTEMPTS: 1
+        with:
+          cliVersion: v0.1.53
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
+          testMode: EditMode
+          checkName: Test results (${{ matrix.name }})
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: test-results-${{ matrix.unityVersion }}
+          path: artifacts

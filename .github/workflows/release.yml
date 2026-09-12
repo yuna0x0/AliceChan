@@ -1,0 +1,206 @@
+name: Release
+
+# Tag a commit with the version in package.json, prefixed with v, and push the tag.
+# Assets on each release: the bare package.json and a zip of the package for the VPM listing at
+# vpm.yuna0x0.com, a unitypackage, a signed UPM tarball for OpenUPM, and the VRM and FBX files.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PACKAGE_PATH: unity/Packages/com.yuna0x0.alice-chan
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    # The signing and itch.io credentials live in this environment rather than in repository
+    # secrets, so a deployment tag rule limits them to v* tags. A job only sees an environment's
+    # secrets when it declares it.
+    environment: release
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Read the package
+        id: package
+        run: |
+          name=$(jq -r .name "$PACKAGE_PATH/package.json")
+          version=$(jq -r .version "$PACKAGE_PATH/package.json")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check the tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF#refs/tags/v}"
+          version="${{ steps.package.outputs.version }}"
+          if [ "$tag" != "$version" ]; then
+            echo "Tag v$tag does not match package.json version $version." >&2
+            exit 1
+          fi
+
+      - name: Run the release checks
+        run: uv run --project tools alicechan-release-check
+
+      - name: Stage the VRM and FBX files
+        run: uv run --project tools alicechan-release-stage "${{ steps.package.outputs.version }}" --out dist
+
+      # Tests are not shipped. They stay in the repository where the dev loop can run them, and
+      # are left out of the artifacts.
+      - name: Build the zip
+        env:
+          ZIP_NAME: ${{ steps.package.outputs.name }}-${{ steps.package.outputs.version }}.zip
+        run: |
+          cd "$PACKAGE_PATH"
+          zip -r "$GITHUB_WORKSPACE/dist/$ZIP_NAME" . -x '*.DS_Store' 'Tests/*' 'Tests.meta'
+
+      # The action packs the asset each .meta file belongs to, so the list it is given is the
+      # meta files rather than the assets, directories included.
+      - name: List the meta files for the unitypackage
+        run: |
+          find "$PACKAGE_PATH" -name '*.meta' ! -path "$PACKAGE_PATH/Tests/*" ! -name 'Tests.meta' > meta-files.txt
+          wc -l < meta-files.txt
+
+      - name: Build the unitypackage
+        uses: pCYSl5EDgo/create-unitypackage@v1.2.3
+        with:
+          package-path: dist/${{ steps.package.outputs.name }}-${{ steps.package.outputs.version }}.unitypackage
+          include-files: meta-files.txt
+
+      # Unity 6.3 and later check tarball packages for a signature, and OpenUPM publishes a
+      # pre-signed tarball rather than signing anything itself. Unity holds the certificate; a
+      # service account with the "Package Manager Package Signer" role authenticates. These
+      # steps do nothing until those secrets exist, so a release works either way.
+      - name: Check for credentials
+        id: signing
+        run: |
+          if [ -n "${{ secrets.UPM_ORG_ID }}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::UPM_ORG_ID is not set, the UPM tarball is not built."
+          fi
+          if [ -n "${{ secrets.BUTLER_API_KEY }}" ]; then
+            echo "itch=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "itch=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::BUTLER_API_KEY is not set, nothing is pushed to itch.io."
+          fi
+
+      - name: Sign a UPM tarball
+        if: steps.signing.outputs.enabled == 'true'
+        env:
+          UPM_SERVICE_ACCOUNT_KEY_ID: ${{ secrets.UPM_SERVICE_ACCOUNT_KEY_ID }}
+          UPM_SERVICE_ACCOUNT_KEY_SECRET: ${{ secrets.UPM_SERVICE_ACCOUNT_KEY_SECRET }}
+          UPM_ORG_ID: ${{ secrets.UPM_ORG_ID }}
+        run: |
+          curl -fsSL https://cdn.packages.unity.com/upm-cli/install.sh | bash
+          # The installer puts the binary in ~/.upm/bin and edits ~/.bashrc, which a job step
+          # does not read, so the directory goes on PATH here.
+          echo "$HOME/.upm/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.upm/bin:$PATH"
+          upm --version
+          # Tests are excluded from the tarball the same way as from the zip: pack a copy.
+          rm -rf pack && mkdir pack
+          cp -R "$PACKAGE_PATH" pack/package
+          rm -rf pack/package/Tests pack/package/Tests.meta
+          upm pack pack/package --organization-id "$UPM_ORG_ID" --destination dist
+          tarball=$(ls dist/*.tgz)
+          if ! tar -tzf "$tarball" | grep -q 'package/.attestation.p7m'; then
+            echo "The tarball carries no attestation." >&2
+            exit 1
+          fi
+
+      # The notes list the downloads, then the changelog section for this version.
+      - name: Write the release notes
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+          NAME: ${{ steps.package.outputs.name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY' > release-notes.md
+          import os, re
+          from pathlib import Path
+          version = os.environ["VERSION"]
+          name = os.environ["NAME"]
+          base = f"https://github.com/{os.environ['REPOSITORY']}/releases/download/v{version}"
+          labels = [
+              (f"AliceChan-{version}-VRM1.vrm", "VRM 1.0"),
+              (f"AliceChan-{version}-VRM0.vrm", "VRM 0.x"),
+              (f"AliceChan-{version}.fbx", "FBX, mesh and rig only"),
+              (f"{name}-{version}.unitypackage", "Unity package, unitypackage"),
+              (f"{name}-{version}.tgz", "Unity package, signed UPM tarball"),
+              (f"{name}-{version}.zip", "Unity package, VPM zip"),
+          ]
+          print("## Downloads")
+          print()
+          for file, label in labels:
+              if Path("dist", file).is_file():
+                  print(f"- {label}: [{file}]({base}/{file})")
+          print()
+          print("Installation is described in the [README](https://github.com/" + os.environ["REPOSITORY"] + "#unity).")
+          print()
+          print("## Changes")
+          print()
+          text = open(os.environ["PACKAGE_PATH"] + "/CHANGELOG.md").read()
+          match = re.search(
+              r"^## \[" + re.escape(version) + r"\][^\n]*\n(.*?)(?=^## \[|\Z)",
+              text, re.S | re.M)
+          if not match or not match.group(1).strip():
+              raise SystemExit(f"The changelog has no section for {version}.")
+          print(match.group(1).strip())
+          PY
+          cat release-notes.md
+
+      - name: List the assets
+        run: ls -la dist
+
+      # Releases are immutable: publishing locks the assets and the tag for good. So everything
+      # is attached to a draft first, and publishing is a step of its own.
+      - name: Stage the release as a draft
+        id: draft
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: true
+          body_path: release-notes.md
+          files: |
+            ${{ env.PACKAGE_PATH }}/package.json
+            dist/*
+
+      - name: Publish the draft
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ steps.draft.outputs.id }}
+        run: |
+          if [ -z "$RELEASE_ID" ]; then
+            echo "The draft step reported no release id." >&2
+            exit 1
+          fi
+          gh api -X PATCH "repos/${{ github.repository }}/releases/$RELEASE_ID" \
+            -F draft=false -F make_latest=true --jq '.html_url'
+
+      # itch.io gets the same files, one channel per file. Nothing happens without the key.
+      - name: Push to itch.io
+        if: startsWith(github.ref, 'refs/tags/') && steps.signing.outputs.itch == 'true'
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          VERSION: ${{ steps.package.outputs.version }}
+          NAME: ${{ steps.package.outputs.name }}
+        run: |
+          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          push() { butler/butler push "$1" "yuna0x0/alice-chan:$2" --userversion "$VERSION"; }
+          push "dist/AliceChan-$VERSION-VRM1.vrm" vrm1
+          push "dist/AliceChan-$VERSION-VRM0.vrm" vrm0
+          push "dist/AliceChan-$VERSION.fbx" fbx
+          push "dist/$NAME-$VERSION.unitypackage" unitypackage
