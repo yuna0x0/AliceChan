@@ -1,0 +1,26 @@
+{
+    "name": "yuna0x0.AliceChan.Editor.Tests",
+    "rootNamespace": "yuna0x0.AliceChan.Editor.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "VRM10",
+        "UniGLTF",
+        "yuna0x0.AliceChan.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
