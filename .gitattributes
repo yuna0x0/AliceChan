@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+*.vroid binary
+*.vrm binary
+*.fbx binary
+*.png binary
+*.jpg binary
+*.tga binary
+*.psd binary
+
+# Unity YAML assets stay text so diffs and merges work
+*.asset text
+*.prefab text
+*.unity text
+*.mat text
+*.meta text

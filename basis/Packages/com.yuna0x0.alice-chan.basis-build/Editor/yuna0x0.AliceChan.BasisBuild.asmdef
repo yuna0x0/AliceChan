@@ -1,0 +1,23 @@
+{
+    "name": "yuna0x0.AliceChan.BasisBuild",
+    "rootNamespace": "yuna0x0.AliceChan.BasisBuild",
+    "references": [
+        "BasisSDK",
+        "BasisSDKEditor",
+        "BasisDebug",
+        "yuna0x0.Basis.Convert.Editor",
+        "VRM10",
+        "UniGLTF"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

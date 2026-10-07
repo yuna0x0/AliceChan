@@ -1,0 +1,19 @@
+{
+  "basis": {
+    "repository": "https://github.com/BasisVR/Basis.git",
+    "commit": "eac8e38ccd72f6dac51ce813c06259ff110a2607",
+    "project": "Basis"
+  },
+  "watari": {
+    "package": "com.yuna0x0.basis.convert",
+    "version": "0.12.2",
+    "zip": "https://github.com/yuna0x0/watari-basis/releases/download/v{version}/com.yuna0x0.basis.convert-{version}.zip"
+  },
+  "univrm": {
+    "version": "0.131.3",
+    "packages": {
+      "com.vrmc.gltf": "https://github.com/vrm-c/UniVRM.git?path=/Packages/UniGLTF#v{version}",
+      "com.vrmc.vrm": "https://github.com/vrm-c/UniVRM.git?path=/Packages/VRM10#v{version}"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "com.yuna0x0.alice-chan.basis-build",
+  "displayName": "Alice Chan Basis build",
+  "version": "2.0.0",
+  "unity": "6000.5",
+  "description": "Editor command that converts the Alice Chan VRM 1.0 avatar with Watari and builds a Basis bundle. Not published; installed into a Basis project by alicechan-basis-setup.",
+  "author": {
+    "name": "yuna0x0",
+    "email": "yuna@yuna0x0.com",
+    "url": "https://yuna0x0.com"
+  },
+  "license": "CC-BY-SA-4.0",
+  "hideInEditor": true
+}
